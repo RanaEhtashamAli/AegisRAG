@@ -1,0 +1,66 @@
+[project]
+name = "aegisrag-backend"
+version = "0.1.0"
+description = "AegisRAG: Secure Enterprise RAG Platform"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "email-validator>=2.1.0",
+    "sqlalchemy>=2.0.30",
+    "alembic>=1.13.0",
+    "psycopg2-binary>=2.9.9",
+    "python-jose[cryptography]>=3.3.0",
+    "argon2-cffi>=23.1.0",
+    "python-multipart>=0.0.9",
+    "pypdf>=4.2.0",
+    "sentence-transformers>=3.0.0",
+    "qdrant-client>=1.9.0",
+    "celery[redis]>=5.4.0",
+    "redis>=5.0.4",
+    "httpx>=0.27.0",
+    "structlog>=24.1.0",
+    "sse-starlette>=2.1.0",
+    "langfuse>=2.36.0",
+    "rank-bm25>=0.2.2",
+    "python-docx>=1.1.0",
+    "markdown-it-py>=3.0.0",
+    # Phase 4
+    "slowapi>=0.1.9",
+    "prometheus-client>=0.20.0",
+    "opentelemetry-api>=1.24.0",
+    "opentelemetry-sdk>=1.24.0",
+    "opentelemetry-instrumentation-fastapi>=0.45b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.24.0",
+    "cryptography>=42.0.0",
+    "tenacity>=8.3.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "ragas>=0.1.0",
+    "langchain-community>=0.2.0",
+    "datasets>=2.20.0",
+    "locust>=2.29.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["app/tests"]

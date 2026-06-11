@@ -1,0 +1,98 @@
+{
+  "title": "AegisRAG — Inference & Models",
+  "uid": "aegisrag-inference",
+  "schemaVersion": 38,
+  "tags": ["aegisrag"],
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "LLM Request Rate by Provider",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (provider) (rate(aegisrag_llm_latency_seconds_count[1m]))",
+          "legendFormat": "{{ provider }}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "LLM p50 / p95 Latency by Provider",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (provider, le)(rate(aegisrag_llm_latency_seconds_bucket[5m])))",
+          "legendFormat": "p50 {{ provider }}"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (provider, le)(rate(aegisrag_llm_latency_seconds_bucket[5m])))",
+          "legendFormat": "p95 {{ provider }}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Tokens Consumed per Minute",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (model, token_type)(rate(aegisrag_tokens_used_total[1m])) * 60",
+          "legendFormat": "{{ model }} / {{ token_type }}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Embedding Latency p95",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(aegisrag_embedding_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95 embedding"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(aegisrag_vector_search_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95 vector search"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(aegisrag_rerank_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95 rerank"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Queries by Model",
+      "type": "piechart",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (model)(increase(aegisrag_rag_queries_total[1h]))",
+          "legendFormat": "{{ model }}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Cached vs Live Queries",
+      "type": "piechart",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(increase(aegisrag_rag_queries_total{cached=\"True\"}[1h]))",
+          "legendFormat": "cached"
+        },
+        {
+          "expr": "sum(increase(aegisrag_rag_queries_total{cached=\"False\"}[1h]))",
+          "legendFormat": "live"
+        }
+      ]
+    }
+  ]
+}

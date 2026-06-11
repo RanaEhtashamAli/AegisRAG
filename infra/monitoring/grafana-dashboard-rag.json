@@ -1,0 +1,144 @@
+{
+  "title": "AegisRAG — RAG Performance",
+  "uid": "aegisrag-rag",
+  "schemaVersion": 38,
+  "tags": ["aegisrag"],
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Query Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(aegisrag_rag_queries_total[1m]))",
+          "legendFormat": "queries/s"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "p50 / p95 / p99 Query Latency",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(aegisrag_rag_query_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(aegisrag_rag_query_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(aegisrag_rag_query_latency_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Cache Hit Rate",
+      "type": "gauge",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(aegisrag_cache_ops_total{result=\"hit\"}[5m])) / sum(rate(aegisrag_cache_ops_total[5m])) * 100",
+          "legendFormat": "hit %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 50, "color": "yellow" },
+              { "value": 80, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Token Usage (total/5m)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(aegisrag_tokens_used_total{token_type=\"prompt\"}[5m])) * 300",
+          "legendFormat": "prompt tokens/5m"
+        },
+        {
+          "expr": "sum(rate(aegisrag_tokens_used_total{token_type=\"completion\"}[5m])) * 300",
+          "legendFormat": "completion tokens/5m"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "LLM Latency by Provider",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(aegisrag_llm_latency_seconds_bucket[5m])) by (le, provider))",
+          "legendFormat": "p95 {{ provider }}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Security — Prompt Injection Blocked",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(increase(aegisrag_prompt_injection_blocked_total[1h]))",
+          "legendFormat": "blocked/hour"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Security Alerts Generated",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(increase(aegisrag_security_alerts_total[1h]))",
+          "legendFormat": "alerts/hour"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Celery Queue Depth",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "aegisrag_celery_queue_depth",
+          "legendFormat": "tasks"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Active Tenants",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "aegisrag_active_tenants_total",
+          "legendFormat": "tenants"
+        }
+      ]
+    }
+  ]
+}

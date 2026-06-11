@@ -1,0 +1,73 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"  # Weekly Monday scan
+
+jobs:
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit Python dependencies
+        working-directory: backend
+        run: pip-audit --requirement <(pip install -e . --dry-run 2>/dev/null | grep "^Requirement" | sed 's/Requirement already satisfied: //;s/ .*//')
+        continue-on-error: true
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Audit Node dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Bandit SAST
+        uses: PyCQA/bandit-action@v1
+        with:
+          path: "backend/app"
+          level: "medium"
+          confidence: "medium"
+          exit_zero: true
+
+  container-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image for scanning
+        run: docker build -t aegisrag-backend:scan ./backend
+
+      - name: Run Trivy container scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "aegisrag-backend:scan"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "HIGH,CRITICAL"
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"

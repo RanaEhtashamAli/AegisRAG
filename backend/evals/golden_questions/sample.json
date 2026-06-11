@@ -1,0 +1,17 @@
+[
+  {
+    "question": "What is the purpose of this document?",
+    "ground_truth": "The document describes the main objectives and scope of the project.",
+    "contexts": []
+  },
+  {
+    "question": "What are the key findings?",
+    "ground_truth": "The key findings are detailed in the main body of the document.",
+    "contexts": []
+  },
+  {
+    "question": "Who are the intended users of this system?",
+    "ground_truth": "The intended users are enterprise teams who need secure document retrieval.",
+    "contexts": []
+  }
+]

@@ -1,0 +1,104 @@
+{
+  "title": "AegisRAG — Queue & Workers",
+  "uid": "aegisrag-workers",
+  "schemaVersion": 38,
+  "tags": ["aegisrag"],
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Celery Queue Depth",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "aegisrag_celery_queue_depth",
+          "legendFormat": "tasks queued"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 100, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Document Ingestion Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (status)(rate(aegisrag_ingestion_total[5m]))",
+          "legendFormat": "{{ status }}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Ingestion Latency p50 / p95",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(aegisrag_ingestion_latency_seconds_bucket[10m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(aegisrag_ingestion_latency_seconds_bucket[10m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Ingestion Success vs Failure (last 1h)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 6, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(increase(aegisrag_ingestion_total{status=\"success\"}[1h]))",
+          "legendFormat": "success"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Ingestion Failures (last 1h)",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 6, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(increase(aegisrag_ingestion_total{status=\"failed\"}[1h]))",
+          "legendFormat": "failed"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Active Tenants",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "aegisrag_active_tenants_total", "legendFormat": "tenants" }
+      ]
+    }
+  ]
+}

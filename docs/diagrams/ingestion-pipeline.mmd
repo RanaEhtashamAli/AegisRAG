@@ -1,0 +1,25 @@
+flowchart TD
+    A([PDF Upload<br/>POST /api/v1/documents/upload]) --> B[Auth + Validation<br/>role · content-type · classification]
+    B --> C[File Storage<br/>uploads/tenant_id/uuid.pdf<br/>SHA-256 checksum]
+    C --> D[DB Write<br/>documents status=uploaded]
+    D --> E[Celery Enqueue<br/>process_document task]
+
+    subgraph worker [Celery Worker — async]
+        F[Text Extraction<br/>pypdf · page-by-page]
+        G[Chunking<br/>~900 words · 120-word overlap]
+        H[Batch Embedding<br/>all-MiniLM-L6-v2 · dim=384]
+        I[Qdrant Upsert<br/>payload: tenant_id · classification · chunk metadata]
+        J[PII Detection<br/>email · phone · SSN · credit card · IBAN]
+        K[DB Write<br/>document_chunks + pii_findings]
+        L[Status Update<br/>documents.status = indexed]
+    end
+
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    H --> J
+    I --> K
+    J --> K
+    K --> L
+    L --> M[Audit Log<br/>document.indexed · pii.detected]

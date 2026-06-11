@@ -1,0 +1,30 @@
+flowchart TD
+    A([User Query]) --> B[JWT Auth<br/>tenant_id · role]
+    B --> C[RBAC<br/>get_allowed_classifications]
+    C --> D[Prompt Security Check<br/>keyword · pattern · heuristic]
+    D -->|injection detected| E([Return warning<br/>no retrieval])
+    D -->|safe| F[Embed Query<br/>all-MiniLM-L6-v2 · dim=384]
+
+    F --> G{Hybrid Retrieval}
+
+    subgraph retrieval [Retrieval Layer]
+        H[Qdrant Vector Search<br/>filter: tenant_id + classification]
+        I[PostgreSQL FTS<br/>to_tsvector · plainto_tsquery]
+        J[RRF Merge<br/>Reciprocal Rank Fusion]
+    end
+
+    G --> H
+    G --> I
+    H --> J
+    I --> J
+
+    J --> K{Reranking<br/>enabled?}
+    K -->|yes| L[CrossEncoder<br/>ms-marco-MiniLM-L-6-v2]
+    K -->|no| M
+    L --> M[Prompt Assembly<br/>system + context chunks + question]
+
+    M --> N[Model Router<br/>restricted → Ollama<br/>else → vLLM or Ollama]
+    N --> O[LLM Inference<br/>streaming SSE or batch]
+    O --> P[Response + Source Citations]
+    P --> Q[Audit Log<br/>rag.query · tenant_id · latency_ms]
+    Q --> R([Return to User])

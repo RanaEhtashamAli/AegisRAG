@@ -1,0 +1,43 @@
+graph TD
+    subgraph tenantA [Tenant A]
+        UA1[tenant_admin]
+        UA2[compliance_officer]
+        UA3[analyst]
+        UA4[viewer]
+    end
+
+    subgraph tenantB [Tenant B]
+        UB1[tenant_admin]
+        UB2[analyst]
+    end
+
+    subgraph layers [Security Enforcement — every request]
+        L1["1 · JWT Authentication<br/>verify token · extract tenant_id + role"]
+        L2["2 · RBAC<br/>role → allowed_classifications"]
+        L3["3 · Qdrant Metadata Filter<br/>must: tenant_id AND classification"]
+        L4["4 · Audit Log<br/>append-only · all sensitive operations"]
+    end
+
+    subgraph access [Classification Access]
+        AC1["public · internal — all roles"]
+        AC2["confidential — analyst · compliance · admin"]
+        AC3["restricted — compliance_officer · tenant_admin only"]
+    end
+
+    UA1 --> L1
+    UA2 --> L1
+    UA3 --> L1
+    UA4 --> L1
+    UB1 --> L1
+    UB2 --> L1
+
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+
+    L2 --> AC1
+    L2 --> AC2
+    L2 --> AC3
+
+    L3 -->|"tenant_id MUST match"| VDA[("Tenant A vectors only")]
+    L3 -->|"tenant_id MUST match"| VDB[("Tenant B vectors only")]

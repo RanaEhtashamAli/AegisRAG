@@ -1,0 +1,39 @@
+graph TB
+    Internet([Internet]) --> ING["NGINX Ingress<br/>TLS · cert-manager"]
+
+    ING --> FE["Frontend<br/>Deployment · 2 replicas"]
+    ING --> API["aegisrag-api<br/>Deployment · 2-3 replicas · HPA"]
+
+    API --> WK["aegisrag-worker<br/>Deployment · 2-10 replicas · HPA on CPU"]
+
+    subgraph stateful [Stateful Storage]
+        PG[("PostgreSQL<br/>StatefulSet + PVC")]
+        QD[("Qdrant<br/>StatefulSet + PVC")]
+    end
+
+    subgraph cache [Cache + Queue]
+        RD[("Redis<br/>Deployment")]
+    end
+
+    subgraph ai [AI Inference]
+        OL["Ollama<br/>CPU fallback"]
+        VL["vLLM<br/>GPU node · optional"]
+    end
+
+    subgraph monitor [Observability]
+        PR["Prometheus"]
+        GR["Grafana"]
+        LF["Langfuse<br/>optional"]
+    end
+
+    API --> PG
+    API --> QD
+    API --> RD
+    API --> OL
+    API -.->|GPU optional| VL
+    WK --> PG
+    WK --> QD
+    WK --> RD
+    API -->|scrape| PR
+    PR --> GR
+    API -.->|traces| LF

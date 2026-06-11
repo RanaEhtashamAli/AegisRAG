@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aegisrag-worker
+  namespace: aegisrag
+  labels:
+    app: aegisrag-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aegisrag-worker
+  template:
+    metadata:
+      labels:
+        app: aegisrag-worker
+    spec:
+      containers:
+        - name: worker
+          image: aegisrag/backend:latest
+          command: ["celery", "-A", "app.workers.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
+          envFrom:
+            - secretRef:
+                name: aegisrag-secrets
+            - configMapRef:
+                name: aegisrag-config
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "3Gi"
+          volumeMounts:
+            - name: uploads
+              mountPath: /tmp/aegisrag_uploads
+      volumes:
+        - name: uploads
+          emptyDir: {}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aegisrag-worker-hpa
+  namespace: aegisrag
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aegisrag-worker
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

@@ -1,0 +1,65 @@
+groups:
+  - name: aegisrag_slo
+    rules:
+      - alert: HighRAGQueryLatency
+        expr: histogram_quantile(0.95, rate(aegisrag_rag_query_latency_seconds_bucket[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RAG p95 latency exceeds 10 seconds"
+          description: "Tenant {{ $labels.tenant_id }}: p95={{ $value }}s"
+
+      - alert: HighErrorRate
+        expr: rate(aegisrag_rag_query_errors_total[5m]) / rate(aegisrag_rag_queries_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RAG error rate above 5%"
+
+      - alert: LLMProviderDown
+        expr: rate(aegisrag_llm_latency_seconds_count[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No LLM inference traffic — provider may be down"
+
+  - name: aegisrag_security
+    rules:
+      - alert: HighPromptInjectionRate
+        expr: rate(aegisrag_prompt_injection_blocked_total[10m]) > 0.5
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: "Elevated prompt injection attempts"
+          description: "Tenant {{ $labels.tenant_id }}: {{ $value }} blocks/sec"
+
+      - alert: SecurityAlertsSpike
+        expr: rate(aegisrag_security_alerts_total[10m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unusual volume of security alerts"
+
+  - name: aegisrag_infra
+    rules:
+      - alert: CeleryQueueBacklog
+        expr: aegisrag_celery_queue_depth > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery queue depth exceeds 100 tasks"
+          description: "Current depth: {{ $value }}"
+
+      - alert: RedisUnavailable
+        expr: aegisrag_cache_ops_total{result="miss"} / (aegisrag_cache_ops_total{result="hit"} + aegisrag_cache_ops_total{result="miss"}) > 0.95
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache miss rate above 95% — Redis may be unavailable"

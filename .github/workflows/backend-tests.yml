@@ -1,0 +1,80 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aegisrag
+          POSTGRES_PASSWORD: aegisrag
+          POSTGRES_DB: aegisrag_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 10s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('backend/pyproject.toml', 'backend/uv.lock') }}
+
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync
+
+      - name: Run linting
+        working-directory: backend
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run type checking
+        working-directory: backend
+        run: uv run mypy app --ignore-missing-imports
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg2://aegisrag:aegisrag@localhost:5432/aegisrag_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-at-least-32-characters-long
+          CACHE_ENABLED: "false"
+          HYBRID_RETRIEVAL_ENABLED: "false"
+          VLLM_ENABLED: "false"
+        run: uv run pytest -v --tb=short --cov=app --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: backend/coverage.xml

@@ -1,0 +1,37 @@
+graph TB
+    User([User]) --> FE["Next.js Frontend<br/>:3000"]
+    FE --> API
+
+    subgraph app [Application]
+        API["FastAPI Backend<br/>:8000"]
+        WK["Celery Worker<br/>ingestion · PII detection"]
+    end
+
+    subgraph data [Storage]
+        PG[("PostgreSQL<br/>users · documents · audit")]
+        QD[("Qdrant<br/>vector store")]
+        RD[("Redis<br/>queue · cache")]
+    end
+
+    subgraph llm [Inference]
+        OL["Ollama<br/>llama3.1:8b · local"]
+        VL["vLLM<br/>GPU · optional"]
+    end
+
+    subgraph obs [Observability]
+        PR["Prometheus<br/>/metrics"]
+        GR["Grafana"]
+        LF["Langfuse<br/>optional"]
+    end
+
+    API --> PG
+    API --> QD
+    API --> RD
+    API --> OL
+    API -.->|GPU optional| VL
+    RD -->|task queue| WK
+    WK --> PG
+    WK --> QD
+    API -->|scrape| PR
+    PR --> GR
+    API -.->|traces| LF

@@ -1,0 +1,78 @@
+replicaCount:
+  api: 2
+  worker: 2
+  frontend: 2
+
+image:
+  backend:
+    repository: aegisrag/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: aegisrag/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+service:
+  api:
+    type: ClusterIP
+    port: 80
+  frontend:
+    type: ClusterIP
+    port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  host: aegisrag.example.com
+  tls: true
+  tlsSecret: aegisrag-tls
+
+config:
+  appEnv: production
+  hybridRetrievalEnabled: true
+  rerankingEnabled: false
+  cacheEnabled: true
+  rateLimitEnabled: true
+  vllmEnabled: false
+  otelEnabled: false
+
+resources:
+  api:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  worker:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 3Gi
+
+autoscaling:
+  worker:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+postgres:
+  enabled: true
+  storage: 20Gi
+
+qdrant:
+  enabled: true
+  storage: 10Gi
+
+redis:
+  enabled: true
+  maxmemory: 512mb
+
+vllm:
+  enabled: false
+  model: mistralai/Mistral-7B-Instruct-v0.3
+  gpu: false

@@ -1,0 +1,109 @@
+{
+  "title": "AegisRAG — Security Events",
+  "uid": "aegisrag-security",
+  "schemaVersion": 38,
+  "tags": ["aegisrag", "security"],
+  "time": { "from": "now-24h", "to": "now" },
+  "refresh": "60s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Prompt Injection Blocks (rate/min)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (tenant_id)(rate(aegisrag_prompt_injection_blocked_total[1m])) * 60",
+          "legendFormat": "tenant {{ tenant_id }}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Security Alerts by Severity (last 1h)",
+      "type": "bargauge",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (severity)(increase(aegisrag_security_alerts_total[1h]))",
+          "legendFormat": "{{ severity }}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Auth Events (success vs failed)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(aegisrag_auth_events_total{event_type=\"login_success\"}[5m]) * 60",
+          "legendFormat": "logins/min (success)"
+        },
+        {
+          "expr": "rate(aegisrag_auth_events_total{event_type=\"login_failed\"}[5m]) * 60",
+          "legendFormat": "logins/min (failed)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Alert Volume by Type (last 24h)",
+      "type": "piechart",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (event_type)(increase(aegisrag_security_alerts_total[24h]))",
+          "legendFormat": "{{ event_type }}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Cumulative Prompt Injections Blocked",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 12, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(aegisrag_prompt_injection_blocked_total)",
+          "legendFormat": "total blocked"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Total Security Alerts (all time)",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 12, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(aegisrag_security_alerts_total)",
+          "legendFormat": "total alerts"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Failed Login Attempts (last 1h)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 12, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(increase(aegisrag_auth_events_total{event_type=\"login_failed\"}[1h]))",
+          "legendFormat": "failed logins"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 50, "color": "red" }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
