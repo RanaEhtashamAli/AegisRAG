@@ -113,7 +113,7 @@ export default function DocumentsPage() {
                   <tr key={doc.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <Link
-                        href={`/dashboard/documents/${doc.id}`}
+                        href={`/documents/${doc.id}`}
                         className="font-medium text-slate-900 hover:underline"
                       >
                         {doc.original_filename}

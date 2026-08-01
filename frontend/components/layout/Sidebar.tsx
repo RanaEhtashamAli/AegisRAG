@@ -18,34 +18,34 @@ import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: [] },
-  { href: "/dashboard/documents", label: "Documents", icon: FileText, roles: [] },
-  { href: "/dashboard/chat", label: "Chat", icon: MessageSquare, roles: [] },
+  { href: "/documents", label: "Documents", icon: FileText, roles: [] },
+  { href: "/chat", label: "Chat", icon: MessageSquare, roles: [] },
   {
-    href: "/dashboard/audit",
+    href: "/audit",
     label: "Audit Log",
     icon: ClipboardList,
     roles: ["tenant_admin", "compliance_officer"],
   },
   {
-    href: "/dashboard/users",
+    href: "/users",
     label: "Users",
     icon: Users,
     roles: ["tenant_admin", "compliance_officer"],
   },
   {
-    href: "/dashboard/pii",
+    href: "/pii",
     label: "PII Findings",
     icon: Shield,
     roles: ["tenant_admin", "compliance_officer"],
   },
   {
-    href: "/dashboard/evals",
+    href: "/evals",
     label: "Evaluations",
     icon: BarChart3,
     roles: ["tenant_admin"],
   },
   {
-    href: "/dashboard/monitoring",
+    href: "/monitoring",
     label: "Monitoring",
     icon: Activity,
     roles: ["tenant_admin"],
