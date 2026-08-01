@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { tenantsService } from "@/services/tenants";
 import { authService } from "@/services/auth";
 import { useAuthStore } from "@/stores/authStore";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const SLUG_MIN_LENGTH = 3;
 
 export default function CreateOrganizationPage() {
   const router = useRouter();
@@ -29,6 +31,10 @@ export default function CreateOrganizationPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (slug.length < SLUG_MIN_LENGTH) {
+      setError(`Slug must be at least ${SLUG_MIN_LENGTH} characters.`);
+      return;
+    }
     if (!SLUG_PATTERN.test(slug)) {
       setError("Slug must be lowercase letters, numbers, and hyphens only.");
       return;
@@ -40,10 +46,7 @@ export default function CreateOrganizationPage() {
       if (token) setAuth(token, me);
       router.push("/dashboard");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        "Could not create organization";
-      setError(String(msg));
+      setError(getApiErrorMessage(err, "Could not create organization"));
     } finally {
       setLoading(false);
     }
@@ -84,6 +87,7 @@ export default function CreateOrganizationPage() {
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 required
+                minLength={SLUG_MIN_LENGTH}
                 pattern="[a-z0-9]+(-[a-z0-9]+)*"
               />
             </div>
