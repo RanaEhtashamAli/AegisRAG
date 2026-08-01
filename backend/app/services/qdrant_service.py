@@ -59,9 +59,9 @@ class QdrantService:
     ) -> list[ScoredPoint]:
         """Mandatory dual filter: tenant_id + classification allow-list."""
         client = self._get_client()
-        return client.search(
+        response = client.query_points(
             collection_name=settings.QDRANT_COLLECTION,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=Filter(
                 must=[
                     FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)),
@@ -74,6 +74,7 @@ class QdrantService:
             limit=top_k,
             with_payload=True,
         )
+        return response.points
 
     def delete_by_document(self, document_id: str, tenant_id: str) -> None:
         """Delete all Qdrant points for a document, scoped to the owning tenant."""
