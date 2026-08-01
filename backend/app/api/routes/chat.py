@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_tenant_user
@@ -15,6 +15,10 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 class ChatSessionCreate(BaseModel):
     title: str = "New Chat"
+
+
+class ChatSessionRename(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
 
 
 class ChatSessionResponse(BaseModel):
@@ -90,6 +94,21 @@ def get_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return _session_to_response(session)
+
+
+@router.patch("/sessions/{session_id}", response_model=ChatSessionResponse)
+def rename_session(
+    session_id: uuid.UUID,
+    body: ChatSessionRename,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_tenant_user),
+) -> ChatSessionResponse:
+    svc = ChatService(db)
+    session = svc.get_session(session_id, user)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    updated = svc.update_session_title(session, body.title)
+    return _session_to_response(updated)
 
 
 @router.delete("/sessions/{session_id}", status_code=204)
