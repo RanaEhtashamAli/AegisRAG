@@ -131,7 +131,7 @@ class RAGService:
         )
         return candidates, False
 
-    def query(
+    async def query(
         self,
         question: str,
         top_k: int,
@@ -204,11 +204,8 @@ class RAGService:
                     else 0,
                 ),
             )
-            import asyncio
             with measure_llm(provider.provider_name, inference_request.model):
-                response = asyncio.get_event_loop().run_until_complete(
-                    provider.generate(inference_request)
-                )
+                response = await provider.generate(inference_request)
             answer = response.content
             prompt_tokens = response.prompt_tokens
             completion_tokens = response.completion_tokens

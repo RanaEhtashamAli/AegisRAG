@@ -2,6 +2,8 @@
 import uuid
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.core.enums import Classification, UserRole
 from app.core.permissions import can_access_document, get_allowed_classifications
 
@@ -114,7 +116,8 @@ def test_tenant_admin_can_access_all_classifications():
 # ---------------------------------------------------------------------------
 
 
-def test_rag_service_passes_allowed_classifications(monkeypatch):
+@pytest.mark.asyncio
+async def test_rag_service_passes_allowed_classifications(monkeypatch):
     """Verify RAGService always calls qdrant_service.search with allowed_classifications."""
     from unittest.mock import AsyncMock
 
@@ -167,7 +170,7 @@ def test_rag_service_passes_allowed_classifications(monkeypatch):
     from app.services.rag_service import RAGService
 
     svc = RAGService(db_mock)
-    svc.query("test question", top_k=3, user=user)
+    await svc.query("test question", top_k=3, user=user)
 
     assert captured["tenant_id"] == str(user.tenant_id)
     # Viewer should only be allowed public and internal

@@ -13,12 +13,12 @@ router = APIRouter(prefix="/rag", tags=["rag"])
 
 
 @router.post("/query", response_model=RAGQueryResponse)
-def rag_query(
+async def rag_query(
     request: RAGQueryRequest,
     db: Session = Depends(get_db),
     user: User = Depends(get_tenant_user),
 ) -> RAGQueryResponse:
-    return RAGService(db).query(request.question, request.top_k, user, request.session_id)
+    return await RAGService(db).query(request.question, request.top_k, user, request.session_id)
 
 
 @router.post("/query-stream")
