@@ -24,6 +24,11 @@ export default function ChatPage() {
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const abortRef = useRef<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Guards against double-submit races: state-based checks (isStreaming) update
+  // asynchronously, so two rapid triggers (e.g. Enter then also clicking Send)
+  // can both pass the check before the first render commits. A ref is read/written
+  // synchronously, so it can't have that race.
+  const sendingRef = useRef(false);
 
   const { data: sessions = [] } = useQuery<ChatSession[]>({
     queryKey: ["chat-sessions"],
@@ -88,7 +93,8 @@ export default function ChatPage() {
   useEffect(() => () => abortRef.current?.(), []);
 
   function handleSend() {
-    if (!question.trim() || isStreaming || !activeSessionId) return;
+    if (!question.trim() || isStreaming || !activeSessionId || sendingRef.current) return;
+    sendingRef.current = true;
     const q = question.trim();
     setQuestion("");
     setPendingMessage(q);
@@ -102,6 +108,7 @@ export default function ChatPage() {
       (token) => setStreamAnswer((prev) => prev + token),
       (sources) => setStreamSources(sources as SourceReference[]),
       () => {
+        sendingRef.current = false;
         setIsStreaming(false);
         // Reload messages from DB so the persisted history is shown
         refetchMessages();
@@ -110,6 +117,7 @@ export default function ChatPage() {
         setStreamSources([]);
       },
       (err) => {
+        sendingRef.current = false;
         setIsStreaming(false);
         setPendingMessage(null);
         setStreamAnswer(`Error: ${err}`);
@@ -291,6 +299,7 @@ export default function ChatPage() {
                       variant="outline"
                       onClick={() => {
                         abortRef.current?.();
+                        sendingRef.current = false;
                         setIsStreaming(false);
                       }}
                     >
