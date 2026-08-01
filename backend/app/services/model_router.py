@@ -87,7 +87,7 @@ class ModelRouter:
             system_prompt=_SYSTEM_PROMPT,
             model=model,
             temperature=0.1,
-            max_tokens=1024,
+            max_tokens=384,
             metadata={
                 "classification": classification,
                 "estimated_tokens": _estimate_tokens(full_prompt),
