@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     SECRET_KEY: str = "change-me-in-production-very-secret-key-at-least-32-chars"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24h — stopgap until refresh tokens exist
 
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432

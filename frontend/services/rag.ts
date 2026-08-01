@@ -31,6 +31,11 @@ export const ragService = {
       signal: controller.signal,
     }).then(async (res) => {
       if (!res.ok) {
+        if (res.status === 401 && typeof window !== "undefined") {
+          localStorage.removeItem("aegis_token");
+          window.location.href = "/login";
+          return;
+        }
         onError(`HTTP ${res.status}`);
         return;
       }
