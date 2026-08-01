@@ -19,7 +19,8 @@ def _client_ip(request: Request) -> str | None:
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-def register(data: UserRegister, db: Session = Depends(get_db)) -> User:
+@limiter.limit(settings.REGISTER_RATE_LIMIT)
+def register(data: UserRegister, request: Request, db: Session = Depends(get_db)) -> User:
     return AuthService(db).register(data)
 
 

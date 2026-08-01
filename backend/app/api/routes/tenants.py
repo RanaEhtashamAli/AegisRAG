@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.tenant import TenantCreate, TenantResponse
@@ -12,8 +14,10 @@ router = APIRouter(prefix="/tenants", tags=["tenants"])
 
 
 @router.post("", response_model=TenantResponse, status_code=201)
+@limiter.limit(settings.TENANT_CREATE_RATE_LIMIT)
 def create_tenant(
     data: TenantCreate,
+    request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> TenantResponse:
