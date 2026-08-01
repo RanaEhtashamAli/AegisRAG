@@ -84,12 +84,12 @@ export default function DocumentDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="w-32 font-medium text-slate-500">Uploaded</span>
-              <span>{formatDate(doc.created_at)}</span>
+              <span className="text-slate-900">{formatDate(doc.created_at)}</span>
             </div>
             {doc.pii_findings_count != null && (
               <div className="flex items-center gap-2">
                 <span className="w-32 font-medium text-slate-500">PII Findings</span>
-                <span>{doc.pii_findings_count}</span>
+                <span className="text-slate-900">{doc.pii_findings_count}</span>
               </div>
             )}
           </CardContent>
@@ -104,7 +104,7 @@ export default function DocumentDetailPage() {
               {canClassify && (
                 <div className="flex items-center gap-2">
                   <select
-                    className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                    className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900"
                     defaultValue={doc.classification}
                     onChange={(e) => classifyMutation.mutate(e.target.value)}
                   >
@@ -149,7 +149,7 @@ export default function DocumentDetailPage() {
                   {piiFindings.map((f) => (
                     <tr key={f.id}>
                       <td className="py-2 font-mono text-xs text-slate-700">{f.pii_type}</td>
-                      <td className="py-2 font-mono text-xs">{f.matched_text_preview}</td>
+                      <td className="py-2 font-mono text-xs text-slate-900">{f.matched_text_preview}</td>
                       <td className="py-2 text-slate-400">{formatDate(f.created_at)}</td>
                     </tr>
                   ))}

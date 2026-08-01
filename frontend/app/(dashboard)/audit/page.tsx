@@ -30,7 +30,7 @@ export default function AuditPage() {
             onChange={(e) => setEventType(e.target.value)}
           />
           <select
-            className="h-10 rounded-md border border-slate-200 px-3 text-sm"
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900"
             value={limit}
             onChange={(e) => setLimit(Number(e.target.value))}
           >

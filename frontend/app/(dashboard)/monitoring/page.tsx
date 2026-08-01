@@ -273,7 +273,7 @@ export default function MonitoringPage() {
             </CardHeader>
             <CardContent>
               {cacheStats.available ? (
-                <div className="flex gap-6 text-sm">
+                <div className="flex gap-6 text-sm text-slate-900">
                   <span>
                     Memory: <strong>{cacheStats.used_memory_human ?? "—"}</strong>
                   </span>

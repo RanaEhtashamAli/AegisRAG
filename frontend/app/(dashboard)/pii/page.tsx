@@ -55,7 +55,7 @@ export default function PiiPage() {
                         {doc.pii_findings_count}
                       </span>
                     </td>
-                    <td className="px-4 py-3 capitalize">{doc.classification}</td>
+                    <td className="px-4 py-3 capitalize text-slate-900">{doc.classification}</td>
                     <td className="px-4 py-3 text-slate-400">{formatDate(doc.created_at)}</td>
                   </tr>
                 ))}

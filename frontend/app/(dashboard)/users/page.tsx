@@ -66,7 +66,7 @@ export default function UsersPage() {
                   type="email"
                 />
                 <select
-                  className="h-10 rounded-md border border-slate-200 px-3 text-sm"
+                  className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900"
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
                 >
@@ -121,7 +121,7 @@ export default function UsersPage() {
                 {users.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      <div className="font-medium">{u.full_name || u.email}</div>
+                      <div className="font-medium text-slate-900">{u.full_name || u.email}</div>
                       <div className="text-slate-400 text-xs">{u.email}</div>
                     </td>
                     <td className="px-4 py-3">
@@ -151,7 +151,7 @@ export default function UsersPage() {
                         {u.id !== me?.id && (
                           <div className="flex items-center justify-end gap-2">
                             <select
-                              className="h-8 rounded border border-slate-200 px-2 text-xs"
+                              className="h-8 rounded border border-slate-200 bg-white px-2 text-xs text-slate-900"
                               defaultValue={u.role}
                               onChange={(e) =>
                                 roleUpdateMutation.mutate({ id: u.id, role: e.target.value })

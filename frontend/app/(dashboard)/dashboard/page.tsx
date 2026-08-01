@@ -37,7 +37,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-slate-400" />
-                <span className="text-2xl font-bold">{documents.length}</span>
+                <span className="text-2xl font-bold text-slate-900">{documents.length}</span>
               </div>
             </CardContent>
           </Card>
@@ -48,7 +48,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-green-500" />
-                <span className="text-2xl font-bold">{indexed}</span>
+                <span className="text-2xl font-bold text-slate-900">{indexed}</span>
               </div>
             </CardContent>
           </Card>
@@ -57,7 +57,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-slate-500">Your Role</CardTitle>
             </CardHeader>
             <CardContent>
-              <span className="text-2xl font-bold capitalize">
+              <span className="text-2xl font-bold capitalize text-slate-900">
                 {user?.role?.replace("_", " ") ?? "—"}
               </span>
             </CardContent>

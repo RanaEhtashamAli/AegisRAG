@@ -62,7 +62,7 @@ export default function DocumentsPage() {
             <CardContent className="pt-4">
               <div className="flex flex-wrap items-center gap-3">
                 <select
-                  className="h-10 rounded-md border border-slate-200 px-3 text-sm"
+                  className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900"
                   value={classification}
                   onChange={(e) => setClassification(e.target.value)}
                 >
