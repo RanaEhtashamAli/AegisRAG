@@ -74,6 +74,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_PER_MINUTE: int = 60
     LOGIN_RATE_LIMIT: str = "10/minute"
+    REGISTER_RATE_LIMIT: str = "10/minute"
+    TENANT_CREATE_RATE_LIMIT: str = "10/minute"
 
     # Upload limits
     MAX_UPLOAD_SIZE_MB: int = 50
