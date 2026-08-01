@@ -16,6 +16,8 @@ export default function ChatPage() {
   const qc = useQueryClient();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const [streamAnswer, setStreamAnswer] = useState("");
   const [streamSources, setStreamSources] = useState<SourceReference[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -58,6 +60,25 @@ export default function ChatPage() {
       if (activeSessionId === id) setActiveSessionId(null);
     },
   });
+
+  const renameSession = useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      api.patch(`/chat/sessions/${id}`, { title }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["chat-sessions"] }),
+  });
+
+  function startEditingSession(s: ChatSession) {
+    setEditingSessionId(s.id);
+    setEditTitle(s.title);
+  }
+
+  function commitSessionRename() {
+    const title = editTitle.trim();
+    if (editingSessionId && title) {
+      renameSession.mutate({ id: editingSessionId, title });
+    }
+    setEditingSessionId(null);
+  }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -132,7 +153,31 @@ export default function ChatPage() {
                       : "text-slate-600 hover:bg-slate-50"
                   )}
                 >
-                  <span className="truncate">{s.title}</span>
+                  {editingSessionId === s.id ? (
+                    <input
+                      autoFocus
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => e.stopPropagation()}
+                      onBlur={commitSessionRename}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitSessionRename();
+                        if (e.key === "Escape") setEditingSessionId(null);
+                      }}
+                      className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-1 text-sm text-slate-900"
+                    />
+                  ) : (
+                    <span
+                      className="truncate"
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        startEditingSession(s);
+                      }}
+                    >
+                      {s.title}
+                    </span>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
