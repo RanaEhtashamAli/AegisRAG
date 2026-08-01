@@ -19,6 +19,7 @@ export default function ChatPage() {
   const [streamAnswer, setStreamAnswer] = useState("");
   const [streamSources, setStreamSources] = useState<SourceReference[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const abortRef = useRef<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +70,7 @@ export default function ChatPage() {
     if (!question.trim() || isStreaming || !activeSessionId) return;
     const q = question.trim();
     setQuestion("");
+    setPendingMessage(q);
     setStreamAnswer("");
     setStreamSources([]);
     setIsStreaming(true);
@@ -82,11 +84,13 @@ export default function ChatPage() {
         setIsStreaming(false);
         // Reload messages from DB so the persisted history is shown
         refetchMessages();
+        setPendingMessage(null);
         setStreamAnswer("");
         setStreamSources([]);
       },
       (err) => {
         setIsStreaming(false);
+        setPendingMessage(null);
         setStreamAnswer(`Error: ${err}`);
       },
       activeSessionId,
@@ -180,6 +184,16 @@ export default function ChatPage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Optimistic render of the just-sent message — appears instantly,
+                    before the backend round trip completes and persists it */}
+                {pendingMessage && (
+                  <div className="flex justify-end">
+                    <div className="max-w-2xl rounded-lg px-4 py-2 text-sm whitespace-pre-wrap bg-slate-900 text-white">
+                      {pendingMessage}
+                    </div>
+                  </div>
+                )}
 
                 {/* Live streaming output */}
                 {isStreaming && (
