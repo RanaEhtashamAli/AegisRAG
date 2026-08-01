@@ -9,6 +9,7 @@ from app.models.evaluation_run import EvaluationRun
 from app.models.invitation import TenantInvitation
 from app.models.pii_finding import PiiFinding
 from app.models.prompt_security_event import PromptSecurityEvent
+from app.models.refresh_token import RefreshToken
 from app.models.security_alert import SecurityAlert
 from app.models.tenant import Tenant
 from app.models.tenant_usage_metrics import TenantUsageMetrics
@@ -29,4 +30,5 @@ __all__ = [
     "SecurityAlert",
     "TenantUsageMetrics",
     "DocumentRetentionPolicy",
+    "RefreshToken",
 ]

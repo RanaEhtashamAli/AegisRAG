@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -33,3 +35,13 @@ def create_access_token(subject: str, extra_claims: dict[str, Any] | None = None
 def decode_access_token(token: str) -> dict[str, Any]:
     """Decode and verify a JWT. Raises jose.JWTError if invalid."""
     return jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+
+
+def generate_refresh_token() -> str:
+    """A random opaque string — deliberately not a JWT, so it carries no
+    decodable claims and is only usable via the server-side hash lookup."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_refresh_token(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode()).hexdigest()
