@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -70,6 +71,12 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in…" : "Sign in"}
             </Button>
+            <p className="text-center text-sm text-slate-600">
+              Need an account?{" "}
+              <Link href="/register" className="font-medium text-slate-900 underline">
+                Sign up
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>
