@@ -8,6 +8,11 @@ Usage:
         --questions evals/golden_questions/sample.json \
         --tenant-token <JWT> \
         --output evals/reports/run_001.json
+
+Scoring uses a self-hosted judge (Ollama via its OpenAI-compatible API, plus the
+same local sentence-transformers embedding model the app already uses) — no
+OpenAI API key required. Override --judge-base-url / --judge-model if you want
+to point at a different Ollama instance or model than the app's own defaults.
 """
 from __future__ import annotations
 
@@ -20,6 +25,13 @@ from datetime import datetime
 from pathlib import Path
 
 import httpx
+
+# Running this script directly (`python evals/run_ragas_eval.py`) puts only
+# evals/ on sys.path, not backend/ — insert it so `app.*` imports resolve
+# regardless of whether this is run as a script or as a module.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app.core.config import settings  # noqa: E402
 
 
 def load_questions(path: str) -> list[dict]:
@@ -38,10 +50,18 @@ def query_rag(base_url: str, token: str, question: str, top_k: int = 5) -> dict:
     return resp.json()
 
 
-def run_ragas(questions: list[dict], answers: list[dict]) -> dict:
+def run_ragas(
+    questions: list[dict],
+    answers: list[dict],
+    judge_base_url: str,
+    judge_model: str,
+) -> dict:
     try:
         from datasets import Dataset
+        from openai import OpenAI
         from ragas import evaluate
+        from ragas.embeddings import HuggingFaceEmbeddings
+        from ragas.llms import llm_factory
         from ragas.metrics import (
             answer_relevancy,
             context_precision,
@@ -54,6 +74,12 @@ def run_ragas(questions: list[dict], answers: list[dict]) -> dict:
             file=sys.stderr,
         )
         sys.exit(1)
+
+    # Self-hosted judge: Ollama's OpenAI-compatible endpoint, no OpenAI key needed.
+    # api_key is a dummy value — Ollama doesn't check it, but the OpenAI client requires one.
+    judge_client = OpenAI(base_url=judge_base_url, api_key="ollama")
+    judge_llm = llm_factory(judge_model, client=judge_client)
+    judge_embeddings = HuggingFaceEmbeddings(model=settings.EMBEDDING_MODEL)
 
     data: dict[str, list] = {
         "question": [],
@@ -74,6 +100,8 @@ def run_ragas(questions: list[dict], answers: list[dict]) -> dict:
     result = evaluate(
         dataset,
         metrics=[faithfulness, answer_relevancy, context_recall, context_precision],
+        llm=judge_llm,
+        embeddings=judge_embeddings,
     )
     return result
 
@@ -85,6 +113,16 @@ def main() -> None:
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--output", required=True, help="Path to write JSON report")
     parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument(
+        "--judge-base-url",
+        default=f"{settings.OLLAMA_BASE_URL}/v1",
+        help="OpenAI-compatible base URL for the judge LLM (defaults to the app's own Ollama)",
+    )
+    parser.add_argument(
+        "--judge-model",
+        default=settings.OLLAMA_MODEL,
+        help="Model name for the judge LLM (defaults to the app's own OLLAMA_MODEL)",
+    )
     args = parser.parse_args()
 
     questions = load_questions(args.questions)
@@ -101,8 +139,8 @@ def main() -> None:
             answers.append({"answer": "", "sources": []})
         time.sleep(0.5)
 
-    print("\nRunning RAGAS evaluation…")
-    scores = run_ragas(questions, answers)
+    print(f"\nRunning RAGAS evaluation (judge: {args.judge_model} @ {args.judge_base_url})…")
+    scores = run_ragas(questions, answers, args.judge_base_url, args.judge_model)
 
     report = {
         "run_id": str(uuid.uuid4()),
