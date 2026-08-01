@@ -16,6 +16,7 @@ const SLUG_MIN_LENGTH = 3;
 export default function CreateOrganizationPage() {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
   const setAuth = useAuthStore((s) => s.setAuth);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -43,7 +44,7 @@ export default function CreateOrganizationPage() {
     try {
       await tenantsService.create(name, slug);
       const me = await authService.me();
-      if (token) setAuth(token, me);
+      if (token && refreshToken) setAuth(token, refreshToken, me);
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Could not create organization"));

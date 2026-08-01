@@ -29,12 +29,12 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await authService.register(email, password, fullName);
-      const { access_token } = await authService.login(email, password);
+      const { access_token, refresh_token } = await authService.login(email, password);
       if (typeof window !== "undefined") {
         localStorage.setItem("aegis_token", access_token);
       }
       const me = await authService.me();
-      setAuth(access_token, me);
+      setAuth(access_token, refresh_token, me);
       router.push("/create-organization");
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Registration failed"));

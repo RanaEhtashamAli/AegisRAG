@@ -1,4 +1,4 @@
-import { api, streamUrl } from "@/lib/api";
+import { api, streamUrl, refreshAccessToken, logoutAndRedirect } from "@/lib/api";
 import type { RAGQueryResponse } from "@/types";
 
 export const ragService = {
@@ -16,29 +16,46 @@ export const ragService = {
     onError: (msg: string) => void,
     session_id?: string,
   ): () => void {
-    const token = typeof window !== "undefined" ? localStorage.getItem("aegis_token") : null;
     const url = streamUrl("/rag/query-stream");
-
     const controller = new AbortController();
 
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ question, top_k, session_id: session_id ?? null }),
-      signal: controller.signal,
-    }).then(async (res) => {
+    async function run(retried: boolean) {
+      const token = typeof window !== "undefined" ? localStorage.getItem("aegis_token") : null;
+
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ question, top_k, session_id: session_id ?? null }),
+          signal: controller.signal,
+        });
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") onError(String(err));
+        return;
+      }
+
       if (!res.ok) {
         if (res.status === 401 && typeof window !== "undefined") {
-          localStorage.removeItem("aegis_token");
-          window.location.href = "/login";
+          if (!retried) {
+            try {
+              await refreshAccessToken();
+              return run(true);
+            } catch {
+              logoutAndRedirect();
+              return;
+            }
+          }
+          logoutAndRedirect();
           return;
         }
         onError(`HTTP ${res.status}`);
         return;
       }
+
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       if (!reader) return;
@@ -63,9 +80,9 @@ export const ragService = {
           }
         }
       }
-    }).catch((err) => {
-      if (err.name !== "AbortError") onError(String(err));
-    });
+    }
+
+    run(false);
 
     return () => controller.abort();
   },
